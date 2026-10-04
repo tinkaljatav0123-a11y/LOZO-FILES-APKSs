@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LOZO FILES + APKS</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f4f6f9;color:#172033}
+header{background:#111827;color:white;padding:18px 16px;position:sticky;top:0;z-index:5}
+.wrap{max-width:900px;margin:auto}.brand{font-size:23px;font-weight:800}.tag{opacity:.75;font-size:12px}
+.hero{padding:35px 0 20px}.hero h1{font-size:34px;margin:0 0 8px}.hero p{color:#667085}
+.search{width:100%;padding:14px;border:1px solid #d0d5dd;border-radius:12px;font-size:16px}
+.card{background:white;border-radius:16px;padding:18px;margin:16px 0;box-shadow:0 5px 20px #0000000d}
+.file{display:flex;align-items:center;justify-content:space-between;gap:15px}.file h3{margin:0 0 5px}.muted{color:#667085;font-size:13px}
+.btn{border:0;border-radius:10px;padding:12px 18px;background:#111827;color:white;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block}
+.btn:disabled{opacity:.45;cursor:not-allowed}.ad{min-height:85px;border:1px dashed #98a2b3;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#667085;background:#fafafa;margin:15px 0}
+.steps{display:flex;gap:8px;margin:18px 0}.step{flex:1;text-align:center;padding:10px;border-radius:9px;background:#e4e7ec;font-size:12px}.step.active{background:#111827;color:white}
+.hidden{display:none}.center{text-align:center}.timer{font-size:42px;font-weight:800;margin:15px}.notice{padding:12px;background:#fff7ed;border-radius:10px;color:#9a3412;font-size:13px}
+footer{text-align:center;padding:35px;color:#667085;font-size:12px}
+@media(max-width:600px){.file{align-items:flex-start}.file .btn{padding:10px 12px}.hero h1{font-size:28px}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><div class="brand">LOZO FILES + APKS</div><div class="tag">Fast & simple file sharing</div></div></header>
+<main class="wrap">
+<section class="hero"><h1>Download Files & APKs</h1><p>Choose a file below. Demo files can be replaced with your own storage links.</p>
+<input id="search" class="search" placeholder="Search files..." oninput="renderFiles()"></section>
+<div id="list"></div>
+<section id="download" class="card hidden">
+<div class="steps"><div id="s1" class="step active">1 · 15 sec</div><div id="s2" class="step">2 · 15 sec</div><div id="s3" class="step">3 · 15 sec</div></div>
+<div class="center"><h2 id="fileTitle"></h2><div id="fileMeta" class="muted"></div></div>
+<div class="ad">ADVERTISEMENT<br>(Replace this area with your approved ad-network code)</div>
+<div id="stage1" class="center"><div class="timer" id="timer">15</div><p>Step 1: please wait for the timer.</p><button id="continue1" class="btn" disabled onclick="nextStep(2)">Continue</button></div>
+<div id="stage2" class="center hidden"><div class="timer" id="timer2">15</div><p>Step 2: please wait for the timer.</p><button id="continue2" class="btn" disabled onclick="nextStep(3)">Continue</button></div>
+<div id="stage3" class="center hidden"><div class="timer" id="timer3">15</div><p>Step 3: please wait for the timer.</p><button id="getlink" class="btn" disabled>Get Link</button></div>
+<p class="notice"><b>1-minute option:</b> You can change any individual step timer to 60 seconds in the code if you want a full 1-minute wait. Each file has its own separate download counter and link.</p><p class="notice">Use only files you have permission to distribute. Keep ad placement clearly labeled and never require ad clicks.</p>
+</section>
+</main>
+<footer>© LOZO FILES + APKS</footer>
+<script>
+const files=[
+ {id:"apk-001",name:"Example APK",size:"12 MB",type:"APK",url:"#"},
+ {id:"zip-001",name:"Example ZIP",size:"25 MB",type:"ZIP",url:"#"}
+];
+let selected=null, timers=[];
+function getCount(id){return Number(localStorage.getItem("lozo_count_"+id)||0)}
+function addCount(id){localStorage.setItem("lozo_count_"+id,getCount(id)+1)}
+function renderFiles(){
+ const q=document.getElementById('search').value.toLowerCase();
+ const el=document.getElementById('list'); el.innerHTML='';
+ files.filter(f=>f.name.toLowerCase().includes(q)).forEach((f,i)=>{
+  el.innerHTML+=`<div class="card file"><div><h3>${esc(f.name)}</h3><div class="muted">${f.type} · ${f.size} · Downloads: ${getCount(f.id)}</div></div><button class="btn" onclick="start(${i})">Download</button></div>`;
+ });
+}
+function esc(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+function start(i){
+ selected=files[i]; document.getElementById('download').classList.remove('hidden');
+ document.getElementById('fileTitle').textContent=selected.name;document.getElementById('fileMeta').textContent=selected.type+" · "+selected.size;
+ document.getElementById('download').scrollIntoView({behavior:"smooth"});
+ resetStages(); countdown(1,15);
+}
+function resetStages(){
+ [1,2,3].forEach(n=>{document.getElementById('stage'+n).classList.toggle('hidden',n!==1);document.getElementById('s'+n).classList.toggle('active',n===1)});
+ document.getElementById('continue1').disabled=true;document.getElementById('continue2').disabled=true;document.getElementById('getlink').disabled=true;
+}
+function countdown(step,secs){
+ const t=document.getElementById(step===1?'timer':step===2?'timer2':'timer3'), b=document.getElementById(step===1?'continue1':step===2?'continue2':'getlink');
+ t.textContent=secs;
+ const id=setInterval(()=>{secs--;t.textContent=secs;if(secs<=0){clearInterval(id);b.disabled=false}},1000);timers.push(id);
+}
+function nextStep(n){
+ [1,2,3].forEach(x=>{document.getElementById('stage'+x).classList.toggle('hidden',x!==n);document.getElementById('s'+x).classList.toggle('active',x===n)});
+ countdown(n,15);
+ if(n===3)document.getElementById('getlink').onclick=()=>{if(selected.url&&selected.url!=="#"){
+  addCount(selected.id);
+  location.href=selected.url;
+}else alert("Add this file's real URL in the files array first.");};
+}
+renderFiles();
+</script>
+</body></html>
